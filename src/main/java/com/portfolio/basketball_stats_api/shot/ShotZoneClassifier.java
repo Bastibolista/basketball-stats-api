@@ -1,11 +1,14 @@
 package com.portfolio.basketball_stats_api.shot;
 
+import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 
 /**
  * Classifies a shot's court position into a tactical {@link ShotZone}.
  * Coordinates are in meters with origin at the basket center; y must be >= 0 (toward half court).
  */
+@Component
 public class ShotZoneClassifier {
 
     private static final double RESTRICTED_AREA_RADIUS_M = 1.25;
