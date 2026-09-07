@@ -10,28 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_DB: basketball_stats
-          POSTGRES_USER: basketball_stats
-          POSTGRES_PASSWORD: basketball_stats
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U basketball_stats -d basketball_stats"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_NAME: basketball_stats
-      DB_USER: basketball_stats
-      DB_PASSWORD: basketball_stats
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
