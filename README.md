@@ -103,6 +103,14 @@ Las coordenadas están en metros: el origen es el centro del aro, `posX` negativ
 GET /api/players/<playerId>/shots
 ```
 
+El historial acepta paginación y filtros opcionales:
+
+```text
+GET /api/players/<playerId>/shots?page=0&size=20&from=2026-09-01T00:00:00Z&to=2026-10-01T00:00:00Z
+```
+
+`from` es inclusivo, `to` es exclusivo y `size` no puede superar 100. La respuesta incluye `content`, `page`, `size`, `totalElements`, `totalPages`, `first` y `last`.
+
 5. Consultar estadísticas por zona:
 
 ```text

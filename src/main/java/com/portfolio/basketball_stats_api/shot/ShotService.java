@@ -5,12 +5,16 @@ import com.portfolio.basketball_stats_api.player.Player;
 import com.portfolio.basketball_stats_api.player.PlayerRepository;
 import com.portfolio.basketball_stats_api.shot.dto.CreateShotRequest;
 import com.portfolio.basketball_stats_api.shot.dto.GlobalStatisticsResponse;
+import com.portfolio.basketball_stats_api.shot.dto.PagedShotsResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ZoneStatisticsResponse;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,13 +43,19 @@ public class ShotService {
     }
 
     @Transactional(readOnly = true)
-    public List<ShotResponse> getShotsForPlayer(UUID playerId) {
+    public PagedShotsResponse getShotsForPlayer(UUID playerId, Instant from, Instant to, Pageable pageable) {
         if (!playerRepository.existsById(playerId)) {
             throw new NotFoundException("Player not found: " + playerId);
         }
-        return shotRepository.findByPlayerIdOrderByTakenAtDesc(playerId).stream()
-                .map(ShotResponse::from)
-                .toList();
+        if (from != null && to != null && !from.isBefore(to)) {
+            throw new IllegalArgumentException("from must be before to");
+        }
+        if (pageable.getPageSize() > 100) {
+            throw new IllegalArgumentException("size cannot exceed 100");
+        }
+        Page<ShotResponse> result = shotRepository.findByPlayerIdAndDateRange(playerId, from, to, pageable)
+                .map(ShotResponse::from);
+        return PagedShotsResponse.from(result);
     }
 
     @Transactional(readOnly = true)

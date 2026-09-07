@@ -4,6 +4,7 @@ import com.portfolio.basketball_stats_api.auth.SecurityConfig;
 import com.portfolio.basketball_stats_api.common.NotFoundException;
 import com.portfolio.basketball_stats_api.shot.dto.CreateShotRequest;
 import com.portfolio.basketball_stats_api.shot.dto.GlobalStatisticsResponse;
+import com.portfolio.basketball_stats_api.shot.dto.PagedShotsResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ZoneStatisticsResponse;
 
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -113,12 +115,39 @@ class ShotControllerTest {
         UUID playerId = UUID.randomUUID();
         ShotResponse response = new ShotResponse(UUID.randomUUID(), playerId,
                 BigDecimal.ZERO, BigDecimal.valueOf(5.0), ShotZone.MID_RANGE_CENTER, false, (short) 2, Instant.now());
-        when(shotService.getShotsForPlayer(playerId)).thenReturn(List.of(response));
+        when(shotService.getShotsForPlayer(playerId, null, null, PageRequest.of(0, 20)))
+                .thenReturn(new PagedShotsResponse(List.of(response), 0, 20, 1, 1, true, true));
 
         mockMvc.perform(get("/api/players/" + playerId + "/shots")
                         .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].zone").value("MID_RANGE_CENTER"));
+                .andExpect(jsonPath("$.content[0].zone").value("MID_RANGE_CENTER"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void getShotsForPlayerRejectsInvalidDateRange() throws Exception {
+        UUID playerId = UUID.randomUUID();
+        when(shotService.getShotsForPlayer(any(), any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("from must be before to"));
+
+        mockMvc.perform(get("/api/players/" + playerId + "/shots")
+                        .param("from", "2026-09-08T00:00:00Z")
+                        .param("to", "2026-09-07T00:00:00Z")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getShotsForPlayerRejectsPageSizeOverLimit() throws Exception {
+        UUID playerId = UUID.randomUUID();
+        when(shotService.getShotsForPlayer(any(), any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("size cannot exceed 100"));
+
+        mockMvc.perform(get("/api/players/" + playerId + "/shots")
+                        .param("size", "101")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                .andExpect(status().isBadRequest());
     }
 
         @Test

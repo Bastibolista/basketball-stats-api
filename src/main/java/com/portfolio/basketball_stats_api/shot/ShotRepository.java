@@ -1,15 +1,29 @@
 package com.portfolio.basketball_stats_api.shot;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 public interface ShotRepository extends JpaRepository<Shot, UUID> {
 
-    List<Shot> findByPlayerIdOrderByTakenAtDesc(UUID playerId);
+    @Query("""
+            SELECT s FROM Shot s
+            WHERE s.player.id = :playerId
+              AND (:from IS NULL OR s.takenAt >= :from)
+              AND (:to IS NULL OR s.takenAt < :to)
+            ORDER BY s.takenAt DESC
+            """)
+    Page<Shot> findByPlayerIdAndDateRange(
+            @Param("playerId") UUID playerId,
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            Pageable pageable);
 
     @Query("""
             SELECT s.zone AS zone,
