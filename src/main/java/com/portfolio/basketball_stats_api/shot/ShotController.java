@@ -5,7 +5,11 @@ import com.portfolio.basketball_stats_api.shot.dto.GlobalStatisticsResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ZoneStatisticsResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
 
@@ -24,6 +28,7 @@ import java.util.UUID;
 
 @RestController
 @SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Shots", description = "Shot registration and shooting analytics")
 public class ShotController {
 
     private final ShotService shotService;
@@ -34,6 +39,13 @@ public class ShotController {
 
     @PostMapping("/api/shots")
     @PreAuthorize("hasAuthority('SHOT_WRITE')")
+        @Operation(summary = "Register shot", description = "Classifies coordinates into a tactical zone and stores the shot result.")
+        @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Shot registered"),
+            @ApiResponse(responseCode = "400", description = "Invalid coordinates or payload"),
+            @ApiResponse(responseCode = "404", description = "Player not found"),
+            @ApiResponse(responseCode = "403", description = "SHOT_WRITE permission required")
+        })
     public ResponseEntity<ShotResponse> createShot(@Valid @RequestBody CreateShotRequest request) {
         ShotResponse response = shotService.createShot(request);
         return ResponseEntity.created(URI.create("/api/shots/" + response.id())).body(response);
@@ -41,18 +53,21 @@ public class ShotController {
 
     @GetMapping("/api/players/{playerId}/shots")
     @PreAuthorize("hasAuthority('SHOT_READ')")
+    @Operation(summary = "List player shots", description = "Returns the player's shots ordered from newest to oldest.")
     public List<ShotResponse> getShotsForPlayer(@PathVariable UUID playerId) {
         return shotService.getShotsForPlayer(playerId);
     }
 
     @GetMapping("/api/players/{playerId}/stats/zones")
     @PreAuthorize("hasAuthority('SHOT_READ')")
+    @Operation(summary = "Get zone statistics", description = "Returns attempts, makes, misses, percentage and points for each zone.")
     public List<ZoneStatisticsResponse> getZoneStatisticsForPlayer(@PathVariable UUID playerId) {
         return shotService.getZoneStatisticsForPlayer(playerId);
     }
 
     @GetMapping("/api/players/{playerId}/stats")
     @PreAuthorize("hasAuthority('SHOT_READ')")
+    @Operation(summary = "Get global statistics", description = "Returns aggregate shooting statistics for the player.")
     public GlobalStatisticsResponse getGlobalStatisticsForPlayer(@PathVariable UUID playerId) {
         return shotService.getGlobalStatisticsForPlayer(playerId);
     }

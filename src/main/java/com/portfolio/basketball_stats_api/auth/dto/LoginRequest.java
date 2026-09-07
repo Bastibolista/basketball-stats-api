@@ -2,8 +2,10 @@ package com.portfolio.basketball_stats_api.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public record LoginRequest(
-        @NotBlank String username,
-        @NotBlank String password
+        @NotBlank @Schema(example = "bastian") String username,
+        @NotBlank @Schema(example = "changeme123", format = "password") String password
 ) {
 }
