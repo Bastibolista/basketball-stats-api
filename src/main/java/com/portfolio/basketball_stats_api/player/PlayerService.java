@@ -20,21 +20,21 @@ public class PlayerService {
     }
 
     @Transactional
-    public PlayerResponse createPlayer(CreatePlayerRequest request) {
-        Player player = new Player(request.name(), request.dominantHand(), request.heightCm());
+    public PlayerResponse createPlayer(CreatePlayerRequest request, String ownerSubject) {
+        Player player = new Player(request.name(), request.dominantHand(), request.heightCm(), ownerSubject);
         return PlayerResponse.from(playerRepository.save(player));
     }
 
     @Transactional(readOnly = true)
-    public PlayerResponse getPlayer(UUID id) {
-        return playerRepository.findById(id)
+    public PlayerResponse getPlayer(UUID id, String ownerSubject) {
+        return playerRepository.findByIdAndOwnerSubject(id, ownerSubject)
                 .map(PlayerResponse::from)
                 .orElseThrow(() -> new NotFoundException("Player not found: " + id));
     }
 
     @Transactional(readOnly = true)
-    public List<PlayerResponse> listPlayers() {
-        return playerRepository.findAll().stream()
+    public List<PlayerResponse> listPlayers(String ownerSubject) {
+        return playerRepository.findAllByOwnerSubjectOrderByCreatedAtDesc(ownerSubject).stream()
                 .map(PlayerResponse::from)
                 .toList();
     }

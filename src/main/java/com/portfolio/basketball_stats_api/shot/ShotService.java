@@ -33,8 +33,8 @@ public class ShotService {
     }
 
     @Transactional
-    public ShotResponse createShot(CreateShotRequest request) {
-        Player player = playerRepository.findById(request.playerId())
+    public ShotResponse createShot(CreateShotRequest request, String ownerSubject) {
+        Player player = playerRepository.findByIdAndOwnerSubject(request.playerId(), ownerSubject)
                 .orElseThrow(() -> new NotFoundException("Player not found: " + request.playerId()));
 
         ShotZone zone = zoneClassifier.classify(request.posX(), request.posY());
@@ -43,8 +43,9 @@ public class ShotService {
     }
 
     @Transactional(readOnly = true)
-    public PagedShotsResponse getShotsForPlayer(UUID playerId, Instant from, Instant to, Pageable pageable) {
-        if (!playerRepository.existsById(playerId)) {
+    public PagedShotsResponse getShotsForPlayer(UUID playerId, String ownerSubject,
+                                                 Instant from, Instant to, Pageable pageable) {
+        if (playerRepository.findByIdAndOwnerSubject(playerId, ownerSubject).isEmpty()) {
             throw new NotFoundException("Player not found: " + playerId);
         }
         if (from != null && to != null && !from.isBefore(to)) {
@@ -53,26 +54,27 @@ public class ShotService {
         if (pageable.getPageSize() > 100) {
             throw new IllegalArgumentException("size cannot exceed 100");
         }
-        Page<ShotResponse> result = shotRepository.findByPlayerIdAndDateRange(playerId, from, to, pageable)
+        Page<ShotResponse> result = shotRepository.findByPlayerIdAndDateRange(
+                playerId, from, to, ownerSubject, pageable)
                 .map(ShotResponse::from);
         return PagedShotsResponse.from(result);
     }
 
     @Transactional(readOnly = true)
-    public List<ZoneStatisticsResponse> getZoneStatisticsForPlayer(UUID playerId) {
-        if (!playerRepository.existsById(playerId)) {
+    public List<ZoneStatisticsResponse> getZoneStatisticsForPlayer(UUID playerId, String ownerSubject) {
+        if (playerRepository.findByIdAndOwnerSubject(playerId, ownerSubject).isEmpty()) {
             throw new NotFoundException("Player not found: " + playerId);
         }
-        return shotRepository.findZoneStatisticsByPlayerId(playerId).stream()
+        return shotRepository.findZoneStatisticsByPlayerId(playerId, ownerSubject).stream()
                 .map(ZoneStatisticsResponse::from)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public GlobalStatisticsResponse getGlobalStatisticsForPlayer(UUID playerId) {
-        if (!playerRepository.existsById(playerId)) {
+    public GlobalStatisticsResponse getGlobalStatisticsForPlayer(UUID playerId, String ownerSubject) {
+        if (playerRepository.findByIdAndOwnerSubject(playerId, ownerSubject).isEmpty()) {
             throw new NotFoundException("Player not found: " + playerId);
         }
-        return GlobalStatisticsResponse.from(shotRepository.findGlobalStatisticsByPlayerId(playerId));
+        return GlobalStatisticsResponse.from(shotRepository.findGlobalStatisticsByPlayerId(playerId, ownerSubject));
     }
 }

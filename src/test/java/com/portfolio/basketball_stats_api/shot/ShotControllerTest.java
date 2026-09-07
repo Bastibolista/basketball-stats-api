@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,10 +52,11 @@ class ShotControllerTest {
         UUID playerId = UUID.randomUUID();
         ShotResponse response = new ShotResponse(UUID.randomUUID(), playerId,
                 BigDecimal.ZERO, BigDecimal.valueOf(7.0), ShotZone.TOP_OF_KEY_THREE, true, (short) 3, Instant.now());
-        when(shotService.createShot(any())).thenReturn(response);
+        when(shotService.createShot(any(), eq("bastian"))).thenReturn(response);
 
         mockMvc.perform(post("/api/shots")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                                .authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new CreateShotRequest(playerId, BigDecimal.ZERO, BigDecimal.valueOf(7.0), true))))
@@ -66,10 +68,12 @@ class ShotControllerTest {
     @Test
     void createShotReturns404WhenPlayerMissing() throws Exception {
         UUID playerId = UUID.randomUUID();
-        when(shotService.createShot(any())).thenThrow(new NotFoundException("Player not found: " + playerId));
+        when(shotService.createShot(any(), eq("bastian")))
+                .thenThrow(new NotFoundException("Player not found: " + playerId));
 
         mockMvc.perform(post("/api/shots")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                                .authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new CreateShotRequest(playerId, BigDecimal.ZERO, BigDecimal.valueOf(7.0), true))))
@@ -81,7 +85,8 @@ class ShotControllerTest {
         UUID playerId = UUID.randomUUID();
 
         mockMvc.perform(post("/api/shots")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                                .authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"playerId\":\"" + playerId + "\",\"posX\":0,\"made\":true}"))
                 .andExpect(status().isBadRequest());
@@ -92,7 +97,8 @@ class ShotControllerTest {
                 UUID playerId = UUID.randomUUID();
 
                 mockMvc.perform(post("/api/shots")
-                                                .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
+                                                .with(jwt().jwt(token -> token.subject("bastian"))
+                                                                .authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
                                                 .contentType(MediaType.APPLICATION_JSON)
                                                 .content(objectMapper.writeValueAsString(
                                                                 new CreateShotRequest(playerId, BigDecimal.ZERO, BigDecimal.valueOf(16), true))))
@@ -115,11 +121,12 @@ class ShotControllerTest {
         UUID playerId = UUID.randomUUID();
         ShotResponse response = new ShotResponse(UUID.randomUUID(), playerId,
                 BigDecimal.ZERO, BigDecimal.valueOf(5.0), ShotZone.MID_RANGE_CENTER, false, (short) 2, Instant.now());
-        when(shotService.getShotsForPlayer(playerId, null, null, PageRequest.of(0, 20)))
+        when(shotService.getShotsForPlayer(playerId, "bastian", null, null, PageRequest.of(0, 20)))
                 .thenReturn(new PagedShotsResponse(List.of(response), 0, 20, 1, 1, true, true));
 
         mockMvc.perform(get("/api/players/" + playerId + "/shots")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                                .authorities(new SimpleGrantedAuthority("SHOT_READ"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].zone").value("MID_RANGE_CENTER"))
                 .andExpect(jsonPath("$.totalElements").value(1));
@@ -128,25 +135,27 @@ class ShotControllerTest {
     @Test
     void getShotsForPlayerRejectsInvalidDateRange() throws Exception {
         UUID playerId = UUID.randomUUID();
-        when(shotService.getShotsForPlayer(any(), any(), any(), any()))
+        when(shotService.getShotsForPlayer(any(), eq("bastian"), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("from must be before to"));
 
         mockMvc.perform(get("/api/players/" + playerId + "/shots")
                         .param("from", "2026-09-08T00:00:00Z")
                         .param("to", "2026-09-07T00:00:00Z")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                                .authorities(new SimpleGrantedAuthority("SHOT_READ"))))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void getShotsForPlayerRejectsPageSizeOverLimit() throws Exception {
         UUID playerId = UUID.randomUUID();
-        when(shotService.getShotsForPlayer(any(), any(), any(), any()))
+        when(shotService.getShotsForPlayer(any(), eq("bastian"), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("size cannot exceed 100"));
 
         mockMvc.perform(get("/api/players/" + playerId + "/shots")
                         .param("size", "101")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                                .authorities(new SimpleGrantedAuthority("SHOT_READ"))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -155,10 +164,11 @@ class ShotControllerTest {
                 UUID playerId = UUID.randomUUID();
                 ZoneStatisticsResponse response = new ZoneStatisticsResponse(
                                 ShotZone.TOP_OF_KEY_THREE, 4, 3, 1, 75.0, 9);
-                when(shotService.getZoneStatisticsForPlayer(playerId)).thenReturn(List.of(response));
+                when(shotService.getZoneStatisticsForPlayer(playerId, "bastian")).thenReturn(List.of(response));
 
                 mockMvc.perform(get("/api/players/" + playerId + "/stats/zones")
-                                                .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                                                .with(jwt().jwt(token -> token.subject("bastian"))
+                                                                .authorities(new SimpleGrantedAuthority("SHOT_READ"))))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$[0].zone").value("TOP_OF_KEY_THREE"))
                                 .andExpect(jsonPath("$[0].attempts").value(4))
@@ -172,10 +182,11 @@ class ShotControllerTest {
         void getGlobalStatisticsReturnsAggregatedMetrics() throws Exception {
                 UUID playerId = UUID.randomUUID();
                 GlobalStatisticsResponse response = new GlobalStatisticsResponse(7, 4, 3, 57.14, 11);
-                when(shotService.getGlobalStatisticsForPlayer(playerId)).thenReturn(response);
+                when(shotService.getGlobalStatisticsForPlayer(playerId, "bastian")).thenReturn(response);
 
                 mockMvc.perform(get("/api/players/" + playerId + "/stats")
-                                                .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                                                .with(jwt().jwt(token -> token.subject("bastian"))
+                                                                .authorities(new SimpleGrantedAuthority("SHOT_READ"))))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.attempts").value(7))
                                 .andExpect(jsonPath("$.madeShots").value(4))

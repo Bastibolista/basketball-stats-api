@@ -45,14 +45,14 @@ class BasketballStatsApiApplicationTests {
 
 	@Test
 	void aggregatesShotStatisticsByZone() {
-		Player player = playerRepository.save(new Player("Integration Player", DominantHand.RIGHT, (short) 169));
+		Player player = playerRepository.save(new Player("Integration Player", DominantHand.RIGHT, (short) 169, "bastian"));
 		shotRepository.saveAll(List.of(
 				new Shot(player, BigDecimal.ZERO, BigDecimal.valueOf(7), ShotZone.TOP_OF_KEY_THREE, true),
 				new Shot(player, BigDecimal.ONE, BigDecimal.valueOf(7), ShotZone.TOP_OF_KEY_THREE, true),
 				new Shot(player, BigDecimal.TWO, BigDecimal.valueOf(7), ShotZone.TOP_OF_KEY_THREE, false)));
 
-		List<ZoneStatisticsProjection> statistics = shotRepository.findZoneStatisticsByPlayerId(player.getId());
-		GlobalStatisticsProjection global = shotRepository.findGlobalStatisticsByPlayerId(player.getId());
+		List<ZoneStatisticsProjection> statistics = shotRepository.findZoneStatisticsByPlayerId(player.getId(), "bastian");
+		GlobalStatisticsProjection global = shotRepository.findGlobalStatisticsByPlayerId(player.getId(), "bastian");
 
 		assertThat(statistics).singleElement().satisfies(zone -> {
 			assertThat(zone.getZone()).isEqualTo(ShotZone.TOP_OF_KEY_THREE);

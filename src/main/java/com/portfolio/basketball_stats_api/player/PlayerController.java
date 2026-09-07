@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,8 +46,9 @@ public class PlayerController {
             @ApiResponse(responseCode = "401", description = "Authentication required"),
             @ApiResponse(responseCode = "403", description = "PLAYER_WRITE permission required")
         })
-    public ResponseEntity<PlayerResponse> createPlayer(@Valid @RequestBody CreatePlayerRequest request) {
-        PlayerResponse response = playerService.createPlayer(request);
+    public ResponseEntity<PlayerResponse> createPlayer(@Valid @RequestBody CreatePlayerRequest request,
+                                                        Authentication authentication) {
+        PlayerResponse response = playerService.createPlayer(request, authentication.getName());
         return ResponseEntity.created(URI.create("/api/players/" + response.id())).body(response);
     }
 
@@ -58,14 +60,14 @@ public class PlayerController {
             @ApiResponse(responseCode = "404", description = "Player not found"),
             @ApiResponse(responseCode = "401", description = "Authentication required")
         })
-    public PlayerResponse getPlayer(@PathVariable UUID id) {
-        return playerService.getPlayer(id);
+    public PlayerResponse getPlayer(@PathVariable UUID id, Authentication authentication) {
+        return playerService.getPlayer(id, authentication.getName());
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('PLAYER_READ')")
     @Operation(summary = "List players", description = "Returns all player profiles.")
-    public List<PlayerResponse> listPlayers() {
-        return playerService.listPlayers();
+    public List<PlayerResponse> listPlayers(Authentication authentication) {
+        return playerService.listPlayers(authentication.getName());
     }
 }

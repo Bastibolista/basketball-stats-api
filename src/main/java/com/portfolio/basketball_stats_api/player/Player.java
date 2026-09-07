@@ -23,6 +23,9 @@ public class Player {
     @Column(nullable = false, length = 100)
     private String name;
 
+    @Column(name = "owner_subject", nullable = false, length = 200, updatable = false)
+    private String ownerSubject;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "dominant_hand", nullable = false, length = 10)
     private DominantHand dominantHand;
@@ -37,10 +40,11 @@ public class Player {
         // required by JPA
     }
 
-    public Player(String name, DominantHand dominantHand, Short heightCm) {
+    public Player(String name, DominantHand dominantHand, Short heightCm, String ownerSubject) {
         this.name = name;
         this.dominantHand = dominantHand;
         this.heightCm = heightCm;
+        this.ownerSubject = ownerSubject;
         this.createdAt = Instant.now();
     }
 
@@ -50,6 +54,10 @@ public class Player {
 
     public String getName() {
         return name;
+    }
+
+    public String getOwnerSubject() {
+        return ownerSubject;
     }
 
     public DominantHand getDominantHand() {

@@ -15,6 +15,7 @@ public interface ShotRepository extends JpaRepository<Shot, UUID> {
     @Query("""
             SELECT s FROM Shot s
             WHERE s.player.id = :playerId
+                                                        AND s.player.ownerSubject = :ownerSubject
               AND (:from IS NULL OR s.takenAt >= :from)
               AND (:to IS NULL OR s.takenAt < :to)
             ORDER BY s.takenAt DESC
@@ -23,6 +24,7 @@ public interface ShotRepository extends JpaRepository<Shot, UUID> {
             @Param("playerId") UUID playerId,
             @Param("from") Instant from,
             @Param("to") Instant to,
+            @Param("ownerSubject") String ownerSubject,
             Pageable pageable);
 
     @Query("""
@@ -33,10 +35,12 @@ public interface ShotRepository extends JpaRepository<Shot, UUID> {
                    (100.0 * SUM(CASE WHEN s.made = true THEN 1 ELSE 0 END) / COUNT(s)) AS fieldGoalPercentage
             FROM Shot s
             WHERE s.player.id = :playerId
+                                                        AND s.player.ownerSubject = :ownerSubject
             GROUP BY s.zone
             ORDER BY s.zone
             """)
-    List<ZoneStatisticsProjection> findZoneStatisticsByPlayerId(@Param("playerId") UUID playerId);
+    List<ZoneStatisticsProjection> findZoneStatisticsByPlayerId(
+            @Param("playerId") UUID playerId, @Param("ownerSubject") String ownerSubject);
 
     @Query("""
             SELECT COUNT(s) AS attempts,
@@ -47,6 +51,8 @@ public interface ShotRepository extends JpaRepository<Shot, UUID> {
                             END AS fieldGoalPercentage
             FROM Shot s
             WHERE s.player.id = :playerId
+                                                        AND s.player.ownerSubject = :ownerSubject
             """)
-    GlobalStatisticsProjection findGlobalStatisticsByPlayerId(@Param("playerId") UUID playerId);
+        GlobalStatisticsProjection findGlobalStatisticsByPlayerId(
+                        @Param("playerId") UUID playerId, @Param("ownerSubject") String ownerSubject);
 }

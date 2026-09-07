@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -54,8 +55,9 @@ public class ShotController {
             @ApiResponse(responseCode = "404", description = "Player not found"),
             @ApiResponse(responseCode = "403", description = "SHOT_WRITE permission required")
         })
-    public ResponseEntity<ShotResponse> createShot(@Valid @RequestBody CreateShotRequest request) {
-        ShotResponse response = shotService.createShot(request);
+    public ResponseEntity<ShotResponse> createShot(@Valid @RequestBody CreateShotRequest request,
+                                                    Authentication authentication) {
+        ShotResponse response = shotService.createShot(request, authentication.getName());
         return ResponseEntity.created(URI.create("/api/shots/" + response.id())).body(response);
     }
 
@@ -66,21 +68,24 @@ public class ShotController {
             @PathVariable UUID playerId,
             @Parameter(description = "Inclusive UTC start timestamp") @RequestParam(required = false) Instant from,
             @Parameter(description = "Exclusive UTC end timestamp") @RequestParam(required = false) Instant to,
-            @PageableDefault(size = 20) Pageable pageable) {
-        return shotService.getShotsForPlayer(playerId, from, to, pageable);
+            @PageableDefault(size = 20) Pageable pageable,
+            Authentication authentication) {
+        return shotService.getShotsForPlayer(playerId, authentication.getName(), from, to, pageable);
     }
 
     @GetMapping("/api/players/{playerId}/stats/zones")
     @PreAuthorize("hasAuthority('SHOT_READ')")
     @Operation(summary = "Get zone statistics", description = "Returns attempts, makes, misses, percentage and points for each zone.")
-    public List<ZoneStatisticsResponse> getZoneStatisticsForPlayer(@PathVariable UUID playerId) {
-        return shotService.getZoneStatisticsForPlayer(playerId);
+    public List<ZoneStatisticsResponse> getZoneStatisticsForPlayer(@PathVariable UUID playerId,
+                                                                    Authentication authentication) {
+        return shotService.getZoneStatisticsForPlayer(playerId, authentication.getName());
     }
 
     @GetMapping("/api/players/{playerId}/stats")
     @PreAuthorize("hasAuthority('SHOT_READ')")
     @Operation(summary = "Get global statistics", description = "Returns aggregate shooting statistics for the player.")
-    public GlobalStatisticsResponse getGlobalStatisticsForPlayer(@PathVariable UUID playerId) {
-        return shotService.getGlobalStatisticsForPlayer(playerId);
+    public GlobalStatisticsResponse getGlobalStatisticsForPlayer(@PathVariable UUID playerId,
+                                                                  Authentication authentication) {
+        return shotService.getGlobalStatisticsForPlayer(playerId, authentication.getName());
     }
 }

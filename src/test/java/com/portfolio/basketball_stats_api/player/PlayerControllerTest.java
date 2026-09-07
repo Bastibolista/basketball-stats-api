@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -44,10 +45,11 @@ class PlayerControllerTest {
     void createPlayerReturnsCreatedWithBody() throws Exception {
         UUID id = UUID.randomUUID();
         PlayerResponse response = new PlayerResponse(id, "Bastian", DominantHand.RIGHT, (short) 169, Instant.now());
-        when(playerService.createPlayer(any())).thenReturn(response);
+        when(playerService.createPlayer(any(), eq("bastian"))).thenReturn(response);
 
         mockMvc.perform(post("/api/players")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("PLAYER_WRITE")))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                            .authorities(new SimpleGrantedAuthority("PLAYER_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new CreatePlayerRequest("Bastian", DominantHand.RIGHT, (short) 169))))
@@ -58,7 +60,8 @@ class PlayerControllerTest {
     @Test
     void createPlayerRejectsBlankName() throws Exception {
         mockMvc.perform(post("/api/players")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("PLAYER_WRITE")))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                            .authorities(new SimpleGrantedAuthority("PLAYER_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new CreatePlayerRequest("", DominantHand.RIGHT, (short) 169))))
@@ -77,7 +80,8 @@ class PlayerControllerTest {
     @Test
     void createPlayerWithoutWritePermissionIsForbidden() throws Exception {
         mockMvc.perform(post("/api/players")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("PLAYER_READ")))
+                        .with(jwt().jwt(token -> token.subject("bastian"))
+                            .authorities(new SimpleGrantedAuthority("PLAYER_READ")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new CreatePlayerRequest("Bastian", DominantHand.RIGHT, (short) 169))))
@@ -87,10 +91,12 @@ class PlayerControllerTest {
     @Test
     void getPlayerReturnsNotFoundWhenMissing() throws Exception {
         UUID id = UUID.randomUUID();
-        when(playerService.getPlayer(id)).thenThrow(new NotFoundException("Player not found: " + id));
+        when(playerService.getPlayer(id, "bastian"))
+            .thenThrow(new NotFoundException("Player not found: " + id));
 
         mockMvc.perform(get("/api/players/" + id)
-                        .with(jwt().authorities(new SimpleGrantedAuthority("PLAYER_READ"))))
+                .with(jwt().jwt(token -> token.subject("bastian"))
+                    .authorities(new SimpleGrantedAuthority("PLAYER_READ"))))
                 .andExpect(status().isNotFound());
     }
 }
