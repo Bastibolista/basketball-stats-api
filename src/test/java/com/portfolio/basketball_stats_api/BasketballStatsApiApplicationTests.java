@@ -7,6 +7,7 @@ import com.portfolio.basketball_stats_api.shot.Shot;
 import com.portfolio.basketball_stats_api.shot.ShotRepository;
 import com.portfolio.basketball_stats_api.shot.ShotZone;
 import com.portfolio.basketball_stats_api.shot.ZoneStatisticsProjection;
+import com.portfolio.basketball_stats_api.shot.GlobalStatisticsProjection;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,7 @@ class BasketballStatsApiApplicationTests {
 				new Shot(player, BigDecimal.TWO, BigDecimal.valueOf(7), ShotZone.TOP_OF_KEY_THREE, false)));
 
 		List<ZoneStatisticsProjection> statistics = shotRepository.findZoneStatisticsByPlayerId(player.getId());
+		GlobalStatisticsProjection global = shotRepository.findGlobalStatisticsByPlayerId(player.getId());
 
 		assertThat(statistics).singleElement().satisfies(zone -> {
 			assertThat(zone.getZone()).isEqualTo(ShotZone.TOP_OF_KEY_THREE);
@@ -59,6 +61,10 @@ class BasketballStatsApiApplicationTests {
 			assertThat(zone.getPointsScored()).isEqualTo(6L);
 			assertThat(zone.getFieldGoalPercentage()).isCloseTo(66.666, org.assertj.core.data.Offset.offset(0.001));
 		});
+		assertThat(global.getAttempts()).isEqualTo(3L);
+		assertThat(global.getMadeShots()).isEqualTo(2L);
+		assertThat(global.getPointsScored()).isEqualTo(6L);
+		assertThat(global.getFieldGoalPercentage()).isCloseTo(66.666, org.assertj.core.data.Offset.offset(0.001));
 	}
 
 }

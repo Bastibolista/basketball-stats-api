@@ -23,4 +23,16 @@ public interface ShotRepository extends JpaRepository<Shot, UUID> {
             ORDER BY s.zone
             """)
     List<ZoneStatisticsProjection> findZoneStatisticsByPlayerId(@Param("playerId") UUID playerId);
+
+    @Query("""
+            SELECT COUNT(s) AS attempts,
+                            COALESCE(SUM(CASE WHEN s.made = true THEN 1 ELSE 0 END), 0) AS madeShots,
+                            COALESCE(SUM(CASE WHEN s.made = true THEN s.points ELSE 0 END), 0) AS pointsScored,
+                            CASE WHEN COUNT(s) = 0 THEN 0.0
+                                    ELSE (100.0 * SUM(CASE WHEN s.made = true THEN 1 ELSE 0 END) / COUNT(s))
+                            END AS fieldGoalPercentage
+            FROM Shot s
+            WHERE s.player.id = :playerId
+            """)
+    GlobalStatisticsProjection findGlobalStatisticsByPlayerId(@Param("playerId") UUID playerId);
 }

@@ -1,6 +1,7 @@
 package com.portfolio.basketball_stats_api.shot;
 
 import com.portfolio.basketball_stats_api.shot.dto.CreateShotRequest;
+import com.portfolio.basketball_stats_api.shot.dto.GlobalStatisticsResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ZoneStatisticsResponse;
 
@@ -45,5 +46,11 @@ public class ShotController {
     @PreAuthorize("hasAuthority('SHOT_READ')")
     public List<ZoneStatisticsResponse> getZoneStatisticsForPlayer(@PathVariable UUID playerId) {
         return shotService.getZoneStatisticsForPlayer(playerId);
+    }
+
+    @GetMapping("/api/players/{playerId}/stats")
+    @PreAuthorize("hasAuthority('SHOT_READ')")
+    public GlobalStatisticsResponse getGlobalStatisticsForPlayer(@PathVariable UUID playerId) {
+        return shotService.getGlobalStatisticsForPlayer(playerId);
     }
 }

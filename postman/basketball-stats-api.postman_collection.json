@@ -236,6 +236,35 @@
       "response": []
     },
     {
+      "name": "GlobalStatistics",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/players/{{playerId}}/stats",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "players",
+            "{{playerId}}",
+            "stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "HealthCheck",
       "request": {
         "method": "GET",

@@ -3,6 +3,7 @@ package com.portfolio.basketball_stats_api.shot;
 import com.portfolio.basketball_stats_api.auth.SecurityConfig;
 import com.portfolio.basketball_stats_api.common.NotFoundException;
 import com.portfolio.basketball_stats_api.shot.dto.CreateShotRequest;
+import com.portfolio.basketball_stats_api.shot.dto.GlobalStatisticsResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ZoneStatisticsResponse;
 
@@ -84,6 +85,18 @@ class ShotControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+        @Test
+        void createShotRejectsCoordinatesOutsideHalfCourt() throws Exception {
+                UUID playerId = UUID.randomUUID();
+
+                mockMvc.perform(post("/api/shots")
+                                                .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(objectMapper.writeValueAsString(
+                                                                new CreateShotRequest(playerId, BigDecimal.ZERO, BigDecimal.valueOf(16), true))))
+                                .andExpect(status().isBadRequest());
+        }
+
     @Test
     void createShotWithoutTokenIsUnauthorized() throws Exception {
         UUID playerId = UUID.randomUUID();
@@ -124,5 +137,21 @@ class ShotControllerTest {
                                 .andExpect(jsonPath("$[0].missedShots").value(1))
                                 .andExpect(jsonPath("$[0].fieldGoalPercentage").value(75.0))
                                 .andExpect(jsonPath("$[0].pointsScored").value(9));
+        }
+
+        @Test
+        void getGlobalStatisticsReturnsAggregatedMetrics() throws Exception {
+                UUID playerId = UUID.randomUUID();
+                GlobalStatisticsResponse response = new GlobalStatisticsResponse(7, 4, 3, 57.14, 11);
+                when(shotService.getGlobalStatisticsForPlayer(playerId)).thenReturn(response);
+
+                mockMvc.perform(get("/api/players/" + playerId + "/stats")
+                                                .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.attempts").value(7))
+                                .andExpect(jsonPath("$.madeShots").value(4))
+                                .andExpect(jsonPath("$.missedShots").value(3))
+                                .andExpect(jsonPath("$.fieldGoalPercentage").value(57.14))
+                                .andExpect(jsonPath("$.pointsScored").value(11));
         }
 }

@@ -93,6 +93,14 @@ GET /api/players/<playerId>/shots
 GET /api/players/<playerId>/stats/zones
 ```
 
+6. Consultar estadísticas globales:
+
+```text
+GET /api/players/<playerId>/stats
+```
+
+La respuesta incluye intentos, aciertos, fallos, efectividad global y puntos anotados.
+
 ## Tests
 
 Los tests de integración levantan PostgreSQL 17 automáticamente con Testcontainers:

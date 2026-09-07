@@ -4,6 +4,7 @@ import com.portfolio.basketball_stats_api.common.NotFoundException;
 import com.portfolio.basketball_stats_api.player.Player;
 import com.portfolio.basketball_stats_api.player.PlayerRepository;
 import com.portfolio.basketball_stats_api.shot.dto.CreateShotRequest;
+import com.portfolio.basketball_stats_api.shot.dto.GlobalStatisticsResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
 import com.portfolio.basketball_stats_api.shot.dto.ZoneStatisticsResponse;
 
@@ -55,5 +56,13 @@ public class ShotService {
         return shotRepository.findZoneStatisticsByPlayerId(playerId).stream()
                 .map(ZoneStatisticsResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public GlobalStatisticsResponse getGlobalStatisticsForPlayer(UUID playerId) {
+        if (!playerRepository.existsById(playerId)) {
+            throw new NotFoundException("Player not found: " + playerId);
+        }
+        return GlobalStatisticsResponse.from(shotRepository.findGlobalStatisticsByPlayerId(playerId));
     }
 }
