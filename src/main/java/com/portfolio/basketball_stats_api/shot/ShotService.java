@@ -5,6 +5,7 @@ import com.portfolio.basketball_stats_api.player.Player;
 import com.portfolio.basketball_stats_api.player.PlayerRepository;
 import com.portfolio.basketball_stats_api.shot.dto.CreateShotRequest;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
+import com.portfolio.basketball_stats_api.shot.dto.ZoneStatisticsResponse;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,16 @@ public class ShotService {
         }
         return shotRepository.findByPlayerIdOrderByTakenAtDesc(playerId).stream()
                 .map(ShotResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ZoneStatisticsResponse> getZoneStatisticsForPlayer(UUID playerId) {
+        if (!playerRepository.existsById(playerId)) {
+            throw new NotFoundException("Player not found: " + playerId);
+        }
+        return shotRepository.findZoneStatisticsByPlayerId(playerId).stream()
+                .map(ZoneStatisticsResponse::from)
                 .toList();
     }
 }

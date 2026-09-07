@@ -4,6 +4,7 @@ import com.portfolio.basketball_stats_api.auth.SecurityConfig;
 import com.portfolio.basketball_stats_api.common.NotFoundException;
 import com.portfolio.basketball_stats_api.shot.dto.CreateShotRequest;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
+import com.portfolio.basketball_stats_api.shot.dto.ZoneStatisticsResponse;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,4 +107,22 @@ class ShotControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].zone").value("MID_RANGE_CENTER"));
     }
+
+        @Test
+        void getZoneStatisticsReturnsAggregatedMetrics() throws Exception {
+                UUID playerId = UUID.randomUUID();
+                ZoneStatisticsResponse response = new ZoneStatisticsResponse(
+                                ShotZone.TOP_OF_KEY_THREE, 4, 3, 1, 75.0, 9);
+                when(shotService.getZoneStatisticsForPlayer(playerId)).thenReturn(List.of(response));
+
+                mockMvc.perform(get("/api/players/" + playerId + "/stats/zones")
+                                                .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].zone").value("TOP_OF_KEY_THREE"))
+                                .andExpect(jsonPath("$[0].attempts").value(4))
+                                .andExpect(jsonPath("$[0].madeShots").value(3))
+                                .andExpect(jsonPath("$[0].missedShots").value(1))
+                                .andExpect(jsonPath("$[0].fieldGoalPercentage").value(75.0))
+                                .andExpect(jsonPath("$[0].pointsScored").value(9));
+        }
 }
