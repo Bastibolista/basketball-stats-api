@@ -1,6 +1,5 @@
 package com.portfolio.basketball_stats_api.player;
 
-import com.portfolio.basketball_stats_api.auth.AuthProperties;
 import com.portfolio.basketball_stats_api.auth.SecurityConfig;
 import com.portfolio.basketball_stats_api.common.NotFoundException;
 import com.portfolio.basketball_stats_api.player.dto.CreatePlayerRequest;
@@ -8,7 +7,6 @@ import com.portfolio.basketball_stats_api.player.dto.PlayerResponse;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -31,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(PlayerController.class)
 @Import(SecurityConfig.class)
-@EnableConfigurationProperties(AuthProperties.class)
 class PlayerControllerTest {
 
     @Autowired

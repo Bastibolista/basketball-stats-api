@@ -1,5 +1,6 @@
 package com.portfolio.basketball_stats_api.auth;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
  */
 @Configuration
 @EnableMethodSecurity
+@EnableConfigurationProperties(AuthProperties.class)
 public class SecurityConfig {
 
     private final AuthProperties authProperties;
