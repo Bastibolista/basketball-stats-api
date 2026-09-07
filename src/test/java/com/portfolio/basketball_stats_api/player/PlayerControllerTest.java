@@ -24,8 +24,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PlayerController.class)
@@ -98,5 +100,22 @@ class PlayerControllerTest {
                 .with(jwt().jwt(token -> token.subject("bastian"))
                     .authorities(new SimpleGrantedAuthority("PLAYER_READ"))))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void preflightFromConfiguredFrontendOriginIsAllowed() throws Exception {
+        mockMvc.perform(options("/api/players")
+                        .header("Origin", "http://localhost:5173")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
+    }
+
+    @Test
+    void preflightFromUnknownOriginIsRejected() throws Exception {
+        mockMvc.perform(options("/api/players")
+                        .header("Origin", "https://unknown.example")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isForbidden());
     }
 }

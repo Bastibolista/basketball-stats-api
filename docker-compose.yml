@@ -29,6 +29,7 @@ services:
       DB_PASSWORD: basketball_stats
       APP_AUTH_USERNAME: bastian
       APP_JWT_SECRET: ${APP_JWT_SECRET:-local-dev-only-secret-CHANGE-ME-before-any-shared-deploy-32bytes}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
     ports:
       - "8080:8080"
     depends_on:

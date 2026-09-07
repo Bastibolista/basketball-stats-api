@@ -3,6 +3,8 @@ package com.portfolio.basketball_stats_api.auth;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -24,19 +26,22 @@ import java.nio.charset.StandardCharsets;
  */
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties(AuthProperties.class)
+@EnableConfigurationProperties({AuthProperties.class, CorsProperties.class})
 public class SecurityConfig {
 
     private final AuthProperties authProperties;
+    private final CorsProperties corsProperties;
 
-    public SecurityConfig(AuthProperties authProperties) {
+    public SecurityConfig(AuthProperties authProperties, CorsProperties corsProperties) {
         this.authProperties = authProperties;
+        this.corsProperties = corsProperties;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // stateless bearer-token API, no cookies involved
+                .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
@@ -47,6 +52,23 @@ public class SecurityConfig {
                         .decoder(jwtDecoder())
                         .jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.setAllowedOrigins(corsProperties.allowedOrigins());
+        configuration.setAllowedMethods(java.util.List.of(
+                HttpMethod.GET.name(), HttpMethod.POST.name(), HttpMethod.PUT.name(),
+                HttpMethod.DELETE.name(), HttpMethod.OPTIONS.name()));
+        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type"));
+        configuration.setExposedHeaders(java.util.List.of("Location"));
+        configuration.setAllowCredentials(false);
+
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source =
+                new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean

@@ -138,3 +138,14 @@ Los tests de integración levantan PostgreSQL 17 automáticamente con Testcontai
 GitHub Actions ejecuta tests contra PostgreSQL real mediante Testcontainers y construye la imagen Docker en cada push o pull request a `main`.
 
 El despliegue en GCP y Google OIDC quedan fuera de `v0.1.0`.
+
+## CORS
+
+El backend acepta por defecto requests de un frontend local en `http://localhost:5173`.
+Para cambiar la allowlist:
+
+```bash
+CORS_ALLOWED_ORIGINS=https://frontend.example.com
+```
+
+Se pueden configurar varios orígenes separados por coma. No uses `*` cuando el frontend envíe credenciales o tokens.
