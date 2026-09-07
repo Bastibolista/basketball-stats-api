@@ -31,6 +31,22 @@ Para detener los servicios:
 docker compose down
 ```
 
+## OpenAPI / Swagger UI
+
+Con la API levantada, la documentación interactiva está disponible en:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+La especificación OpenAPI en JSON está disponible en:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+Usa `Authentication` para obtener un JWT y pégalo en el botón `Authorize` de Swagger UI como Bearer token. La documentación es pública solo para facilitar el desarrollo local; antes de producción deberá protegerse o deshabilitarse.
+
 ## Flujo de API
 
 Todas las requests, excepto login y healthcheck, requieren `Authorization: Bearer <accessToken>`.

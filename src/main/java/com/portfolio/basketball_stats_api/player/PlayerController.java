@@ -3,6 +3,8 @@ package com.portfolio.basketball_stats_api.player;
 import com.portfolio.basketball_stats_api.player.dto.CreatePlayerRequest;
 import com.portfolio.basketball_stats_api.player.dto.PlayerResponse;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/players")
+@SecurityRequirement(name = "bearerAuth")
 public class PlayerController {
 
     private final PlayerService playerService;
