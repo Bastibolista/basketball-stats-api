@@ -1,13 +1,18 @@
 package com.portfolio.basketball_stats_api.shot;
 
+import com.portfolio.basketball_stats_api.auth.AuthProperties;
+import com.portfolio.basketball_stats_api.auth.SecurityConfig;
 import com.portfolio.basketball_stats_api.common.NotFoundException;
 import com.portfolio.basketball_stats_api.shot.dto.CreateShotRequest;
 import com.portfolio.basketball_stats_api.shot.dto.ShotResponse;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -20,12 +25,15 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ShotController.class)
+@Import(SecurityConfig.class)
+@EnableConfigurationProperties(AuthProperties.class)
 class ShotControllerTest {
 
     @Autowired
@@ -45,6 +53,7 @@ class ShotControllerTest {
         when(shotService.createShot(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/shots")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new CreateShotRequest(playerId, BigDecimal.ZERO, BigDecimal.valueOf(7.0), true))))
@@ -59,6 +68,7 @@ class ShotControllerTest {
         when(shotService.createShot(any())).thenThrow(new NotFoundException("Player not found: " + playerId));
 
         mockMvc.perform(post("/api/shots")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new CreateShotRequest(playerId, BigDecimal.ZERO, BigDecimal.valueOf(7.0), true))))
@@ -70,9 +80,21 @@ class ShotControllerTest {
         UUID playerId = UUID.randomUUID();
 
         mockMvc.perform(post("/api/shots")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_WRITE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"playerId\":\"" + playerId + "\",\"posX\":0,\"made\":true}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createShotWithoutTokenIsUnauthorized() throws Exception {
+        UUID playerId = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/shots")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreateShotRequest(playerId, BigDecimal.ZERO, BigDecimal.valueOf(7.0), true))))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -82,7 +104,8 @@ class ShotControllerTest {
                 BigDecimal.ZERO, BigDecimal.valueOf(5.0), ShotZone.MID_RANGE_CENTER, false, (short) 2, Instant.now());
         when(shotService.getShotsForPlayer(playerId)).thenReturn(List.of(response));
 
-        mockMvc.perform(get("/api/players/" + playerId + "/shots"))
+        mockMvc.perform(get("/api/players/" + playerId + "/shots")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("SHOT_READ"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].zone").value("MID_RANGE_CENTER"));
     }
