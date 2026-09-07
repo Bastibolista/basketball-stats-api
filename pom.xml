@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.portfolio</groupId>
 	<artifactId>basketball-stats-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1.0</version>
 	<name>basketball-stats-api</name>
 	<description/>
 	<url/>
@@ -53,6 +53,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
 		<dependency>
