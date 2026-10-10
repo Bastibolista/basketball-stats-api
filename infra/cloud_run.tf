@@ -1,8 +1,6 @@
 locals {
   secret_env = {
-    DB_PASSWORD            = "db-password"
-    APP_AUTH_PASSWORD_HASH = "auth-password-hash"
-    APP_JWT_SECRET         = "jwt-secret"
+    DB_PASSWORD = "db-password"
   }
 }
 
@@ -48,8 +46,16 @@ resource "google_cloud_run_v2_service" "api" {
         value = var.db_user
       }
       env {
-        name  = "APP_AUTH_USERNAME"
-        value = var.auth_username
+        name  = "APP_AUTH_MODE"
+        value = "google"
+      }
+      env {
+        name  = "GOOGLE_CLIENT_ID"
+        value = var.google_client_id
+      }
+      env {
+        name  = "APP_ALLOWED_EMAILS"
+        value = var.allowed_emails
       }
       env {
         name  = "CORS_ALLOWED_ORIGINS"

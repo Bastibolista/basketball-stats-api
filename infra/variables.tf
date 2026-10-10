@@ -10,7 +10,7 @@ variable "region" {
 
 variable "image_tag" {
   type    = string
-  default = "0.2.0"
+  default = "0.3.0"
 }
 
 # Phase 2 switch: Cloud Run needs every secret to already have a version.
@@ -31,9 +31,16 @@ variable "db_user" {
   default = ""
 }
 
-variable "auth_username" {
-  type    = string
-  default = ""
+variable "google_client_id" {
+  description = "OAuth client ID that Google ID tokens must be issued for"
+  type        = string
+  default     = ""
+}
+
+variable "allowed_emails" {
+  description = "Comma-separated Google accounts allowed to use the API"
+  type        = string
+  default     = ""
 }
 
 variable "cors_allowed_origins" {
