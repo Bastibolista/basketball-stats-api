@@ -13,7 +13,7 @@ FROM eclipse-temurin:21-jre-alpine
 
 RUN addgroup -S spring && adduser -S spring -G spring
 WORKDIR /app
-COPY --from=build /workspace/target/basketball-stats-api-0.1.0.jar app.jar
+COPY --from=build /workspace/target/*.jar app.jar
 RUN chown spring:spring app.jar
 
 USER spring
