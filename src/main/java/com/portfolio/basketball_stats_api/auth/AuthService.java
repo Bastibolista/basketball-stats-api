@@ -3,11 +3,13 @@ package com.portfolio.basketball_stats_api.auth;
 import com.portfolio.basketball_stats_api.auth.dto.LoginRequest;
 import com.portfolio.basketball_stats_api.auth.dto.LoginResponse;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnProperty(name = "app.auth.mode", havingValue = "local")
 public class AuthService {
 
     private final AuthProperties authProperties;

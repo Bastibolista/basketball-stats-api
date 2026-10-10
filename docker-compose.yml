@@ -27,6 +27,7 @@ services:
       DB_NAME: basketball_stats
       DB_USER: basketball_stats
       DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      APP_AUTH_MODE: local
       APP_AUTH_USERNAME: ${APP_AUTH_USERNAME:?set APP_AUTH_USERNAME in .env}
       APP_AUTH_PASSWORD_HASH: ${APP_AUTH_PASSWORD_HASH:?set APP_AUTH_PASSWORD_HASH in .env}
       APP_JWT_SECRET: ${APP_JWT_SECRET:?set APP_JWT_SECRET in .env}

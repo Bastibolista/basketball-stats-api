@@ -8,6 +8,7 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -17,6 +18,7 @@ import java.util.Date;
 import java.util.Set;
 
 @Service
+@ConditionalOnProperty(name = "app.auth.mode", havingValue = "local")
 public class TokenService {
 
     private static final Duration TOKEN_TTL = Duration.ofHours(12);

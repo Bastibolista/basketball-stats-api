@@ -60,6 +60,11 @@ Usa `Authentication` para obtener un JWT y pégalo en el botón `Authorize` de S
 
 Todas las requests, excepto login y healthcheck, requieren `Authorization: Bearer <accessToken>`.
 
+La autenticación depende de `APP_AUTH_MODE`:
+
+- `google` (por defecto, producción): se envía un ID token de Google. Requiere `GOOGLE_CLIENT_ID` y `APP_ALLOWED_EMAILS` (lista separada por comas); no existe `/api/auth/login`.
+- `local` (desarrollo, lo usa `docker-compose.yml`): el login de abajo emite un JWT propio.
+
 1. Autenticarse:
 
 ```text
