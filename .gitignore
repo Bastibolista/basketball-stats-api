@@ -39,3 +39,10 @@ Thumbs.db
 ### Env / secrets ###
 .env
 *.env.local
+
+### Terraform ###
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
