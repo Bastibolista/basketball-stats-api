@@ -6,6 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public record LoginRequest(
         @NotBlank @Schema(example = "bastian") String username,
-        @NotBlank @Schema(example = "changeme123", format = "password") String password
+        @NotBlank @Schema(example = "your-password", format = "password") String password
 ) {
 }

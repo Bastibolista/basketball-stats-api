@@ -59,12 +59,12 @@ POST /api/auth/login
 
 ```json
 {
-  "username": "bastian",
-  "password": "changeme123"
+  "username": "<APP_AUTH_USERNAME>",
+  "password": "<tu password>"
 }
 ```
 
-La credencial anterior es solo para desarrollo local. No debe reutilizarse en producción.
+Las credenciales se definen en `.env` (ver `.env.example`); la API no arranca sin ellas.
 
 2. Crear un jugador:
 
