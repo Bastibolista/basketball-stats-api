@@ -50,6 +50,14 @@ resource "google_service_account_iam_member" "deployer_act_as_runtime" {
   member             = "serviceAccount:${google_service_account.deployer.email}"
 }
 
+# Cloud Run checks that the deploying identity can read the image before accepting the revision.
+resource "google_artifact_registry_repository_iam_member" "deployer_reader" {
+  location   = google_artifact_registry_repository.ghcr_remote.location
+  repository = google_artifact_registry_repository.ghcr_remote.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.deployer.email}"
+}
+
 output "wif_provider" {
   value = google_iam_workload_identity_pool_provider.github.name
 }
