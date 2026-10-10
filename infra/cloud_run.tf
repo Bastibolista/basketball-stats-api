@@ -89,8 +89,16 @@ resource "google_cloud_run_v2_service" "api" {
   depends_on = [google_secret_manager_secret_iam_member.api_access]
 
   # The API fills a service-level scaling block that the provider then reports as drift.
+  # CI owns the deployed image and gcloud stamps client metadata, so Terraform must not revert them.
   lifecycle {
-    ignore_changes = [scaling]
+    ignore_changes = [
+      scaling,
+      client,
+      client_version,
+      template[0].containers[0].image,
+      template[0].labels,
+      template[0].revision,
+    ]
   }
 }
 

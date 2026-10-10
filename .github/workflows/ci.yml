@@ -64,3 +64,42 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: publish-image
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT_ID: personal-511214
+      REGION: us-central1
+      SERVICE: basketball-stats-api
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/916180074624/locations/global/workloadIdentityPools/github-pool/providers/github
+          service_account: github-deployer@personal-511214.iam.gserviceaccount.com
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      # "update" fails if the service was torn down, instead of creating one without its env vars.
+      - name: Deploy to Cloud Run
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gcloud run services update "$SERVICE" \
+            --project "$PROJECT_ID" --region "$REGION" \
+            --image "$REGION-docker.pkg.dev/$PROJECT_ID/ghcr-remote/bastibolista/basketball-stats-api:$VERSION"
+
+      - name: Smoke test
+        run: |
+          URL="$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 60 "$URL/actuator/health"; then exit 0; fi
+            sleep 10
+          done
+          exit 1
