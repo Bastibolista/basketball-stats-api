@@ -13,10 +13,19 @@ Backend del Basketball Shot Tracker. Registra tiros, clasifica zonas de cancha y
 
 ## Ejecutar localmente
 
-Requiere Docker Desktop con integración WSL habilitada:
+Requiere Docker Desktop con integración WSL habilitada.
+
+Crea tu `.env` a partir de la plantilla; la API no arranca sin credenciales:
 
 ```bash
+cp .env.example .env   # y completa los valores
 docker compose up --build -d
+```
+
+O usa la imagen publicada en GitHub Container Registry (pasando las mismas variables):
+
+```bash
+docker pull ghcr.io/bastibolista/basketball-stats-api:latest
 ```
 
 Verificar disponibilidad:
@@ -137,7 +146,13 @@ Los tests de integración levantan PostgreSQL 17 automáticamente con Testcontai
 
 GitHub Actions ejecuta tests contra PostgreSQL real mediante Testcontainers y construye la imagen Docker en cada push o pull request a `main`.
 
-El despliegue en GCP y Google OIDC quedan fuera de `v0.1.0`.
+Tras pasar los tests, los push a `main` y los tags `v*` publican la imagen en `ghcr.io/bastibolista/basketball-stats-api` (`sha-<commit>`, `latest` y la versión semver en tags).
+
+El despliegue en GCP y Google OIDC quedan fuera de `v0.2.0`.
+
+## Rate limiting
+
+Límite por IP y por minuto, en memoria (por instancia): login 5 y resto de `/api/**` 120. Al excederlo responde `429` con `Retry-After`. Configurable con `RATE_LIMIT_ENABLED`, `RATE_LIMIT_LOGIN_PER_MINUTE` y `RATE_LIMIT_API_PER_MINUTE`.
 
 ## CORS
 
