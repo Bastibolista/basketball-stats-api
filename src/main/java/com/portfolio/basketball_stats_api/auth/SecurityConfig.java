@@ -1,5 +1,9 @@
 package com.portfolio.basketball_stats_api.auth;
 
+import com.portfolio.basketball_stats_api.ratelimit.FixedWindowRateLimiter;
+import com.portfolio.basketball_stats_api.ratelimit.RateLimitFilter;
+import com.portfolio.basketball_stats_api.ratelimit.RateLimitProperties;
+
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +20,11 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.filter.CorsFilter;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 
 /**
  * TEMPORARY local-dev auth: self-issued/validated JWT with a shared HMAC secret.
@@ -26,15 +32,20 @@ import java.nio.charset.StandardCharsets;
  */
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties({AuthProperties.class, CorsProperties.class})
+@EnableConfigurationProperties({AuthProperties.class, CorsProperties.class, RateLimitProperties.class})
 public class SecurityConfig {
+
+    private static final long RATE_LIMIT_WINDOW_MILLIS = 60_000;
 
     private final AuthProperties authProperties;
     private final CorsProperties corsProperties;
+    private final RateLimitProperties rateLimitProperties;
 
-    public SecurityConfig(AuthProperties authProperties, CorsProperties corsProperties) {
+    public SecurityConfig(AuthProperties authProperties, CorsProperties corsProperties,
+                          RateLimitProperties rateLimitProperties) {
         this.authProperties = authProperties;
         this.corsProperties = corsProperties;
+        this.rateLimitProperties = rateLimitProperties;
     }
 
     @Bean
@@ -51,6 +62,11 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
                         .decoder(jwtDecoder())
                         .jwtAuthenticationConverter(jwtAuthenticationConverter())));
+
+        // Not a @Bean: a Filter bean would also be auto-registered in the servlet container and run twice.
+        if (rateLimitProperties.enabled()) {
+            http.addFilterAfter(rateLimitFilter(), CorsFilter.class);
+        }
         return http.build();
     }
 
@@ -69,6 +85,13 @@ public class SecurityConfig {
                 new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private RateLimitFilter rateLimitFilter() {
+        Clock clock = Clock.systemUTC();
+        return new RateLimitFilter(
+                new FixedWindowRateLimiter(clock, rateLimitProperties.loginPerMinute(), RATE_LIMIT_WINDOW_MILLIS),
+                new FixedWindowRateLimiter(clock, rateLimitProperties.apiPerMinute(), RATE_LIMIT_WINDOW_MILLIS));
     }
 
     @Bean
