@@ -81,6 +81,11 @@ resource "google_cloud_run_v2_service" "api" {
   }
 
   depends_on = [google_secret_manager_secret_iam_member.api_access]
+
+  # The API fills a service-level scaling block that the provider then reports as drift.
+  lifecycle {
+    ignore_changes = [scaling]
+  }
 }
 
 # The API enforces its own JWT auth; Cloud Run IAM stays open so a browser or frontend can call it.
